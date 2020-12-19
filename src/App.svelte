@@ -7,7 +7,8 @@
 	let mines = 10;
 	let isGameOver = false;
 	let hasGameStarted = false;
-	let minesPositionList = []
+	let minesPositionList = [];
+	let isMouseDown = false;
 
 	let numberColors = {
 		0: "black",
@@ -19,8 +20,8 @@
 		6: "teal",
 		7: "brown",
 		8: "black"
-
 	}
+
 
 	onMount(() => {
 		initBoard()
@@ -111,6 +112,8 @@
 	
 </script>
 
+<svelte:window on:mousedown={() => isMouseDown = true} on:mouseup={() => isMouseDown = false} />
+
 <div class="board">
 	{#each board as row, rowIndex}
 		{#each row as cell, cellIndex}
@@ -119,11 +122,12 @@
 				style="width: {`${100 / rows}%`}; height: {`${100 / cols}%`};"
 				class:revealed="{cell.isRevealed}"
 				on:click={() => hasGameStarted ? revealCell(rowIndex, cellIndex) : revealInitialCell(rowIndex, cellIndex)}
+				on:mouseover={(e) => console.log(e, this)}
 			>
 			{#if cell.hasBomb && cell.isRevealed}
 				<div class="cell-bomb"> X</div>
 			{:else if cell.isRevealed && cell.number > 0}
-				<div class="cell-amount" style="color: {numberColors[cell.number]}">{cell.number}</div>
+				<p class="cell-amount" style="color: {numberColors[cell.number]}">{cell.number}</p>
 			{/if}
 
 			</div>
@@ -144,39 +148,55 @@
 		margin: auto;
 		display: flex;
 		flex-wrap: wrap;
-		border: 1px solid black;
+		border: solid #808080;
+		border-width: 1px 0 0 1px;
 		width: 500px;
 		height: 500px;
 	}
 
 	.cell {
-		border: 1px solid gray;
+		border: solid #808080;
+		border-width: 0 1px 1px 0;
 		cursor: pointer;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		background: #c0c0c0;
+		box-shadow: inset 2px 2px 2px 0px #F7F7F7, inset -2px -2px 2px 0px #7D7D7D;
 	}
-
-	.cell-amount {
-		width: 100%;
-		height: 100%;
-		font-weight: 600;
-		font-size: 20px;
-		text-align: center;
-	}
-
-	.cell-bomb {
-		width: 100%;
-		height: 100%;
-		font-weight: 600;
-		font-size: 20px;
-		text-align: center;
-	}
-
 
 	.cell:hover {
 		background: lightblue;
 	}
 
+
 	.cell.revealed {
-		background: lightgray;
+		background: #dfdede;
+		box-shadow: none;
 	}
+
+	.cell-amount {
+		font-weight: 600;
+		font-size: 24px;
+		margin: 0;
+		padding: 0;
+	}
+
+	.cell-bomb {
+		font-weight: 600;
+		font-size: 24px;
+		margin: 0;
+		padding: 0;
+		color: #FAFAFA;
+		width: 100%;
+		height: 100%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		background: rgb(124, 56, 56)
+	}
+
+
+	
 
 </style>
