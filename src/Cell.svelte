@@ -12,6 +12,7 @@
   export let number;
   export let hasGameStarted;
   export let isFlagged;
+  export let isGameOver
 
   let numberColors = {
     0: "black",
@@ -26,7 +27,7 @@
   }
 
   function handleCellClick() {
-    if (!isFlagged && !isRevealed) {
+    if (!isFlagged && !isRevealed && !isGameOver) {
       if (hasGameStarted) {
         revealCell()
       } else {
@@ -66,10 +67,12 @@
     on:click={handleCellClick}
     on:contextmenu|preventDefault={() => flagCell(row, col)}
   >
-  {#if hasBomb && isRevealed}
-    <div class="cell-bomb"> X</div>
+  {#if !hasBomb && isRevealed && isFlagged}
+    <div class="cell-bomb"> RR</div>
   {:else if isFlagged}
     <div class="cell-flag"> ✔</div>
+  {:else if hasBomb && isRevealed}
+    <div class="cell-bomb"> X</div>
   {:else if isRevealed && number > 0}
     <p class="cell-amount" style="color: {numberColors[number]}">{number}</p>
   {/if}

@@ -198,6 +198,7 @@
 					isMouseDown={isMouseDown}
 					hasBomb={cell.hasBomb}
 					isRevealed={cell.isRevealed}
+					isGameOver={isGameOver}
 					number={cell.number}
 					on:revealInitialCell={(e) => revealInitialCell(e.detail.rowIndex, e.detail.colIndex)}
 					on:revealCell={(e) => triggerCellReveal(e.detail.rowIndex, e.detail.colIndex)}
