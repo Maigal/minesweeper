@@ -12,11 +12,26 @@
 	let isMouseDown = false;
 
 	let timer = 0
+	let gameResult = ''
 
 
 	onMount(() => {
 		initBoard()
 	})
+
+	const addToTimer = () => {timer += 1}
+
+
+	let timerInterval
+
+	$: {
+		if (hasGameStarted) {
+			timerInterval = setInterval(addToTimer, 1000)
+		} 
+		if (isGameOver) {
+			clearInterval(timerInterval)
+		}
+	}
 
 
 	const rng = (min, max) => {
@@ -24,11 +39,18 @@
 	}
 
 	const resetGame = () => {
+		timer = 0
 		board = []
-		isGameOver = false
+		isGameOver = true
 		hasGameStarted = false
 		minesPositionList = []
+		gameResult = ''
 		initBoard()
+	}
+
+	const endGame = () => {
+		isGameOver = true
+		hasGameStarted = false
 	}
 
 	const initBoard = () => {
@@ -74,12 +96,13 @@
 		}
 
 		minesPositionList.forEach(position => {
-					console.log('pos ', position)
 			addMineCounterToBorderingCells(position.row, position.col)
 		})
 		
-		revealCell(row, col)
 		hasGameStarted = true
+		isGameOver = false
+		revealCell(row, col)
+		
 	}
 
 	const triggerCellReveal = (row, col) => {
@@ -87,8 +110,8 @@
 		let gameState = checkForVictory()
 		console.log(gameState)
 		if (gameState){
-			console.log('ganamo')
-			isGameOver = true
+			gameResult = 'YOU WIN'
+			endGame()
 		}
 	}
 
@@ -132,10 +155,11 @@
 	}
 
 	const loseGame = () => {
-		isGameOver = true
+		endGame()
 		minesPositionList.forEach(mine => {
 			board[mine.row][mine.col].isRevealed = true
 		})
+		gameResult = 'YOU LOSE'
 	}
 
 	const getTimerMinutes = () => {
@@ -157,6 +181,7 @@
 
 <div class="board-wrapper">
 	<div class="controls">
+		<h2>{gameResult}</h2>
 		<button on:click={resetGame}>Reset</button>
 		<div class="timer">{getTimerMinutes()}:{timer}</div>
 	</div>
@@ -214,8 +239,14 @@
 			border-radius: 5px;
 			box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
 			display: flex;
-			justify-content: center;
+			justify-content: space-between;
 			align-items: center;
+			padding: 5px 25px;
+		}
+
+		.timer {
+			font-size: 24px;
+			font-weight: 100;
 		}
 		.board {
 		margin: auto;
