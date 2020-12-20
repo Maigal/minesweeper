@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import Cell from './Cell.svelte'
 	let board = [];
 	let rows = 9;
 	let cols = 9;
@@ -10,25 +11,24 @@
 	let minesPositionList = [];
 	let isMouseDown = false;
 
-	let numberColors = {
-		0: "black",
-		1: "blue",
-		2: "green",
-		3: "red",
-		4: "purple",
-		5: "orange",
-		6: "teal",
-		7: "brown",
-		8: "black"
-	}
+	let timer = 0
 
 
 	onMount(() => {
 		initBoard()
 	})
 
+
 	const rng = (min, max) => {
 		return Math.floor(Math.random() * (max - min)) + min;
+	}
+
+	const resetGame = () => {
+		board = []
+		isGameOver = false
+		hasGameStarted = false
+		minesPositionList = []
+		initBoard()
 	}
 
 	const initBoard = () => {
@@ -38,7 +38,7 @@
 			for(let row = 0; row < rows; row++) {
 				currentRow.push({
 					hasBomb: false,
-					isRevelead: false,
+					isRevealed: false,
 					isFlagged: false,
 					number: 0
 				})
@@ -78,9 +78,18 @@
 			addMineCounterToBorderingCells(position.row, position.col)
 		})
 		
-		
 		revealCell(row, col)
 		hasGameStarted = true
+	}
+
+	const triggerCellReveal = (row, col) => {
+		revealCell(row, col)
+		let gameState = checkForVictory()
+		console.log(gameState)
+		if (gameState){
+			console.log('ganamo')
+			isGameOver = true
+		}
 	}
 
 	const revealCell = (row, col) => {
@@ -102,6 +111,26 @@
 		}
 	}
 
+	const flagCell = (row, col) => {
+		if(!board[row][col].isRevealed) {
+			board[row][col].isFlagged = !board[row][col].isFlagged
+		}
+	}
+
+	const	checkForVictory = () => {
+		for(let col = 0; col < cols; col++) {
+			for(let row = 0; row < rows; row++) {
+				let currentCell = board[row][col]
+				console.log('current:', row, col, currentCell)
+				console.log('current stuff: ', currentCell.hasBomb, currentCell.isRevealed, currentCell.isFlagged)
+				if(!currentCell.hasBomb && !currentCell.isRevealed && !currentCell.isFlagged) {
+					return false
+				}
+			}
+		}
+		return true
+	}
+
 	const loseGame = () => {
 		isGameOver = true
 		minesPositionList.forEach(mine => {
@@ -109,34 +138,54 @@
 		})
 	}
 
+	const getTimerMinutes = () => {
+		return timer / 60 >= 1 ? Math.floor(timer/60) : 0
+	}
+
+	const getTimerSeconds = () => {
+		if (timer / 60 >= 1) {
+			return timer - (60 * Math.floor(timer / 60))
+		} else {
+			return timer
+		}
+	}
+
 	
 </script>
 
 <svelte:window on:mousedown={() => isMouseDown = true} on:mouseup={() => isMouseDown = false} />
 
-<div class="board">
-	{#each board as row, rowIndex}
-		{#each row as cell, cellIndex}
-			<div 
-				class="cell" 
-				style="width: {`${100 / rows}%`}; height: {`${100 / cols}%`};"
-				class:revealed="{cell.isRevealed}"
-				on:click={() => hasGameStarted ? revealCell(rowIndex, cellIndex) : revealInitialCell(rowIndex, cellIndex)}
-				on:mouseover={(e) => console.log(e, this)}
-			>
-			{#if cell.hasBomb && cell.isRevealed}
-				<div class="cell-bomb"> X</div>
-			{:else if cell.isRevealed && cell.number > 0}
-				<p class="cell-amount" style="color: {numberColors[cell.number]}">{cell.number}</p>
-			{/if}
-
-			</div>
+<div class="board-wrapper">
+	<div class="controls">
+		<button on:click={resetGame}>Reset</button>
+		<div class="timer">{getTimerMinutes()}:{timer}</div>
+	</div>
+	<div class="board">
+		{#each board as row, rowIndex}
+			{#each row as cell, cellIndex}
+				<Cell
+					row={rowIndex}
+					col={cellIndex}
+					width={`${100 / rows}%`}
+					height={`${100 / cols}%`}
+					hasGameStarted={hasGameStarted}
+					isFlagged={cell.isFlagged}
+					isMouseDown={isMouseDown}
+					hasBomb={cell.hasBomb}
+					isRevealed={cell.isRevealed}
+					number={cell.number}
+					on:revealInitialCell={(e) => revealInitialCell(e.detail.rowIndex, e.detail.colIndex)}
+					on:revealCell={(e) => triggerCellReveal(e.detail.rowIndex, e.detail.colIndex)}
+					on:flagCell={(e) => flagCell(e.detail.rowIndex, e.detail.colIndex)}
+				/>
+			{/each}
 		{/each}
-	{/each}
+	</div>
+
 </div>
 
 <style>
-	*, *::before, *::after {
+	:global(*), :global(*::before), :global(*::after) {
 	box-sizing: border-box;
 	}
 
@@ -144,59 +193,40 @@
 		width: 100%;
 		height: 100%;
 	}
-	.board {
+
+	:global(body) {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		background: #E8E8E8;
+	}
+
+		.board-wrapper {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.controls {
+			width: 100%;
+			height: 60px;
+			margin-bottom: 20px;
+			background: #FAFAFA;
+			border-radius: 5px;
+			box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		.board {
 		margin: auto;
 		display: flex;
 		flex-wrap: wrap;
-		border: solid #808080;
-		border-width: 1px 0 0 1px;
+		border: 1px solid #808080;
+		box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
 		width: 500px;
 		height: 500px;
+		padding: 1px;
 	}
-
-	.cell {
-		border: solid #808080;
-		border-width: 0 1px 1px 0;
-		cursor: pointer;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		background: #c0c0c0;
-		box-shadow: inset 2px 2px 2px 0px #F7F7F7, inset -2px -2px 2px 0px #7D7D7D;
-	}
-
-	.cell:hover {
-		background: lightblue;
-	}
-
-
-	.cell.revealed {
-		background: #dfdede;
-		box-shadow: none;
-	}
-
-	.cell-amount {
-		font-weight: 600;
-		font-size: 24px;
-		margin: 0;
-		padding: 0;
-	}
-
-	.cell-bomb {
-		font-weight: 600;
-		font-size: 24px;
-		margin: 0;
-		padding: 0;
-		color: #FAFAFA;
-		width: 100%;
-		height: 100%;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		background: rgb(124, 56, 56)
-	}
-
-
 	
 
 </style>
