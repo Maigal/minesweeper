@@ -69,7 +69,7 @@
   {#if hasBomb && isRevealed}
     <div class="cell-bomb"> X</div>
   {:else if isFlagged}
-    <div class="cell-flag"> F</div>
+    <div class="cell-flag"> ✔</div>
   {:else if isRevealed && number > 0}
     <p class="cell-amount" style="color: {numberColors[number]}">{number}</p>
   {/if}
@@ -133,6 +133,6 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background: rgb(124, 56, 56)
+		background: #42aa42
   }
 </style>
