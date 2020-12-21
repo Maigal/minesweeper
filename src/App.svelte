@@ -1,15 +1,20 @@
 <script>
 	import { onMount } from 'svelte';
 	import Cell from './Cell.svelte'
+	import Timer from './Timer.svelte'
+	import { STATE } from './constants.js'
+
+
 	let board = [];
 	let rows = 9;
 	let cols = 9;
 	let totalMines = 10;
 	let mines = 10;
-	let isGameOver = false;
-	let hasGameStarted = false;
+	// let isGameOver = false;
+	// let hasGameStarted = false;
 	let minesPositionList = [];
 	let isMouseDown = false;
+	let gameState = STATE.WAITING
 
 	let timer = 0
 	let gameResult = ''
@@ -19,16 +24,15 @@
 		initBoard()
 	})
 
-	const addToTimer = () => {timer += 1}
+	const addToTimer = () => {timer += 100}
 
 
 	let timerInterval
 
 	$: {
-		if (hasGameStarted) {
-			timerInterval = setInterval(addToTimer, 1000)
-		} 
-		if (isGameOver) {
+		if (gameState === STATE.PLAYING) {
+			timerInterval = setInterval(addToTimer, 100)
+		} else {
 			clearInterval(timerInterval)
 		}
 	}
@@ -41,16 +45,19 @@
 	const resetGame = () => {
 		timer = 0
 		board = []
-		isGameOver = true
-		hasGameStarted = false
+		// isGameOver = true
+		// hasGameStarted = false
+		gameState = STATE.WAITING
 		minesPositionList = []
 		gameResult = ''
 		initBoard()
+		console.log('resetting')
 	}
 
 	const endGame = () => {
-		isGameOver = true
-		hasGameStarted = false
+		// isGameOver = true
+		// hasGameStarted = false
+		gameState = STATE.FINISHED
 	}
 
 	const initBoard = () => {
@@ -99,8 +106,9 @@
 			addMineCounterToBorderingCells(position.row, position.col)
 		})
 		
-		hasGameStarted = true
-		isGameOver = false
+		// hasGameStarted = true
+		// isGameOver = false
+		gameState = STATE.PLAYING
 		revealCell(row, col)
 		
 	}
@@ -108,7 +116,6 @@
 	const triggerCellReveal = (row, col) => {
 		revealCell(row, col)
 		let gameState = checkForVictory()
-		console.log(gameState)
 		if (gameState){
 			gameResult = 'YOU WIN'
 			endGame()
@@ -116,7 +123,7 @@
 	}
 
 	const revealCell = (row, col) => {
-		if (!isGameOver && !board[row][col].isRevealed) {
+		if (gameState !== STATE.FINISHED && !board[row][col].isRevealed) {
 			board[row][col].isRevealed = true
 			if (board[row][col].hasBomb) {
 				loseGame()
@@ -144,8 +151,6 @@
 		for(let col = 0; col < cols; col++) {
 			for(let row = 0; row < rows; row++) {
 				let currentCell = board[row][col]
-				console.log('current:', row, col, currentCell)
-				console.log('current stuff: ', currentCell.hasBomb, currentCell.isRevealed, currentCell.isFlagged)
 				if(!currentCell.hasBomb && !currentCell.isRevealed && !currentCell.isFlagged) {
 					return false
 				}
@@ -162,17 +167,7 @@
 		gameResult = 'YOU LOSE'
 	}
 
-	const getTimerMinutes = () => {
-		return timer / 60 >= 1 ? Math.floor(timer/60) : 0
-	}
-
-	const getTimerSeconds = () => {
-		if (timer / 60 >= 1) {
-			return timer - (60 * Math.floor(timer / 60))
-		} else {
-			return timer
-		}
-	}
+	
 
 	
 </script>
@@ -180,10 +175,11 @@
 <svelte:window on:mousedown={() => isMouseDown = true} on:mouseup={() => isMouseDown = false} />
 
 <div class="board-wrapper">
+{gameState}-{timer}
 	<div class="controls">
 		<h2>{gameResult}</h2>
 		<button on:click={resetGame}>Reset</button>
-		<div class="timer">{getTimerMinutes()}:{timer}</div>
+		<Timer ms={timer} />
 	</div>
 	<div class="board">
 		{#each board as row, rowIndex}
@@ -193,12 +189,11 @@
 					col={cellIndex}
 					width={`${100 / rows}%`}
 					height={`${100 / cols}%`}
-					hasGameStarted={hasGameStarted}
+					gameState={gameState}
 					isFlagged={cell.isFlagged}
 					isMouseDown={isMouseDown}
 					hasBomb={cell.hasBomb}
 					isRevealed={cell.isRevealed}
-					isGameOver={isGameOver}
 					number={cell.number}
 					on:revealInitialCell={(e) => revealInitialCell(e.detail.rowIndex, e.detail.colIndex)}
 					on:revealCell={(e) => triggerCellReveal(e.detail.rowIndex, e.detail.colIndex)}
@@ -245,10 +240,6 @@
 			padding: 5px 25px;
 		}
 
-		.timer {
-			font-size: 24px;
-			font-weight: 100;
-		}
 		.board {
 		margin: auto;
 		display: flex;

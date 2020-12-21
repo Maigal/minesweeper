@@ -1,5 +1,6 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { STATE } from './constants.js'
   const dispatch = createEventDispatcher();
 
   export let row;
@@ -10,9 +11,8 @@
   export let hasBomb;
   export let isRevealed;
   export let number;
-  export let hasGameStarted;
+  export let gameState;
   export let isFlagged;
-  export let isGameOver
 
   let numberColors = {
     0: "black",
@@ -27,8 +27,9 @@
   }
 
   function handleCellClick() {
-    if (!isFlagged && !isRevealed && !isGameOver) {
-      if (hasGameStarted) {
+    console.log('gamestate: ', gameState)
+    if (!isFlagged && gameState !== STATE.FINISHED) {
+      if (gameState === STATE.PLAYING) {
         revealCell()
       } else {
         revealInitialCell()
@@ -51,6 +52,7 @@
   }
 
   function flagCell() {
+    console.log('gamestateX: ', gameState)
     dispatch('flagCell', {
       rowIndex: row,
       colIndex: col
