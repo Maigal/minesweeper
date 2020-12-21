@@ -20,7 +20,7 @@ export let ms
   <span class="timer-block">{getMinutes(ms)}</span>
   <span>:</span>
   <span class="timer-block">{getSeconds(ms)}</span>
-  <span class="timer-ms">{getMs(ms)}<span/>
+  <span class="timer-ms">.{getMs(ms)}<span/>
 </div>
 
 

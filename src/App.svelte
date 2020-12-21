@@ -175,7 +175,6 @@
 <svelte:window on:mousedown={() => isMouseDown = true} on:mouseup={() => isMouseDown = false} />
 
 <div class="board-wrapper">
-{gameState}-{timer}
 	<div class="controls">
 		<h2>{gameResult}</h2>
 		<button on:click={resetGame}>Reset</button>

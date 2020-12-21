@@ -14,6 +14,8 @@
   export let gameState;
   export let isFlagged;
 
+  let hovering = false;
+
   let numberColors = {
     0: "black",
     1: "blue",
@@ -26,15 +28,27 @@
     8: "black"
   }
 
-  function handleCellClick() {
-    console.log('gamestate: ', gameState)
-    if (!isFlagged && gameState !== STATE.FINISHED) {
-      if (gameState === STATE.PLAYING) {
-        revealCell()
-      } else {
-        revealInitialCell()
+  function enter() {
+		hovering = true;
+	}
+
+	function leave() {
+		hovering = false;
+	}
+
+  function handleCellClick(e) {
+    if(e.which === 1) {
+      if (!isFlagged && gameState !== STATE.FINISHED) {
+        if (gameState === STATE.PLAYING) {
+          revealCell()
+        } else {
+          revealInitialCell()
+        }
       }
+    } else if (e.which === 3) {
+      flagCell()
     }
+    
   }
 
   function revealCell() {
@@ -52,7 +66,6 @@
   }
 
   function flagCell() {
-    console.log('gamestateX: ', gameState)
     dispatch('flagCell', {
       rowIndex: row,
       colIndex: col
@@ -66,15 +79,17 @@
     class="cell" 
     style="width: {width}; height: {height}"
     class:revealed="{isRevealed}"
-    on:click={handleCellClick}
-    on:contextmenu|preventDefault={() => flagCell(row, col)}
+    class:hovering={!isRevealed && hovering && isMouseDown}
+    on:contextmenu|preventDefault
+    on:mouseup={handleCellClick}
+    on:mouseenter={enter} on:mouseleave={leave}
   >
-  {#if !hasBomb && isRevealed && isFlagged}
-    <div class="cell-bomb"> RR</div>
+  {#if !hasBomb && gameState === STATE.FINISHED && isFlagged}
+    <div class="cell-bomb">✔</div>
   {:else if isFlagged}
-    <div class="cell-flag"> ✔</div>
+    <div class="cell-flag">✔</div>
   {:else if hasBomb && isRevealed}
-    <div class="cell-bomb"> X</div>
+    <div class="cell-bomb">X</div>
   {:else if isRevealed && number > 0}
     <p class="cell-amount" style="color: {numberColors[number]}">{number}</p>
   {/if}
@@ -94,10 +109,11 @@
 		box-shadow: inset 2px 2px 2px 0px #F7F7F7, inset -2px -2px 2px 0px #7D7D7D;
     margin: 0;
     padding: 0;
+    user-select: none;
 	}
 
 	.cell:hover {
-		background: lightblue;
+		background: #dddcdc;
 	}
 
 
@@ -139,5 +155,9 @@
 		justify-content: center;
 		align-items: center;
 		background: #42aa42
+  }
+
+  .hovering {
+    box-shadow: inset 5px 5px 2px 0px rgba(0,0,0,0.2) !important;
   }
 </style>
